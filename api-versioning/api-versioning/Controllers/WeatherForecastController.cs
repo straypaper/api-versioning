@@ -1,68 +1,53 @@
+using api_versioning.Requests;
 using Asp.Versioning;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api_versioning.Controllers;
-
-[ApiController]
-[ApiVersion("1.0")]
-[ApiVersion("2.0")]
-[Route("v{version:apiVersion}/[controller]")]
-public class WeatherForecastController : ControllerBase
-{
-    private static readonly string[] Summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
-    private readonly ILogger<WeatherForecastController> _logger;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
-    {
-        _logger = logger;
-    }
-
-    [HttpGet]
-    [MapToApiVersion("1.0")]
-    public IEnumerable<WeatherForecast> GetForecast()
-    {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-    }
-    
-    [HttpGet]
-    [MapToApiVersion("2.0")]
-    public IEnumerable<WeatherForecastv2> GetConvertedForecast(TemperatureUnit unit)
-    {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecastv2
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                Temperature = ConvertToUnit(unit, Random.Shared.Next(-20, 55)),
-                
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-    }
-
-    private static double ConvertToUnit(TemperatureUnit unit, int next)
-    {
-        return unit switch
-        {
-            TemperatureUnit.Celsius => next,
-            TemperatureUnit.Fahrenheit => 32 + (int)(next / 0.5556),
-            TemperatureUnit.Kelvin => Convert.ToDouble(next) + 273.15,
-            _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null)
-        };
-    }
-}
 
 public enum TemperatureUnit
 {
     Celsius,
     Fahrenheit,
     Kelvin
+}
+
+[ApiController]
+[ApiVersion(1.0)]
+[ApiVersion(2.0)]
+[Route("v{version:apiVersion}/[controller]")]
+//[Route("[controller]")]
+public class WeatherForecastController : ControllerBase
+{
+    private readonly ILogger<WeatherForecastController> _logger;
+    private readonly IMediator _mediator;
+
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, IMediator mediator)
+    {
+        _logger = logger;
+        _mediator = mediator;
+    }
+
+    [HttpGet]
+    [MapToApiVersion(1.0)]
+    public async Task<ObjectResult> GetForecast()
+    {
+        Console.WriteLine("called v1 of the api");
+        var result = await _mediator.Send(new WeatherForecastRequest<IEnumerable<Contracts.v1.WeatherForecast>>());        
+        return new OkObjectResult(result);
+    }
+    
+    [HttpGet]
+    [MapToApiVersion(2.0)]
+    public async Task<ObjectResult> GetConvertedForecast(TemperatureUnit unit)
+    {
+        Console.WriteLine("called v2 of the api");
+        var request = new WeatherForecastRequest<IEnumerable<Contracts.v2.WeatherForecast>>
+        {
+            Unit = unit
+        };
+
+        var result = await _mediator.Send(request);        
+        return new OkObjectResult(result);
+    }
 }

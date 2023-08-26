@@ -5,8 +5,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace api_versioning;
 
-public class ConfigureSwaggerOptions
-    : IConfigureNamedOptions<SwaggerGenOptions>
+public class ConfigureSwaggerOptions : IConfigureNamedOptions<SwaggerGenOptions>
 {
     private readonly IApiVersionDescriptionProvider provider;
 
