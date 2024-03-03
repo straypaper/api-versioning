@@ -13,15 +13,14 @@ builder.Services.AddApiVersioning(opt =>
     opt.DefaultApiVersion = new ApiVersion(2, 0);
     opt.AssumeDefaultVersionWhenUnspecified = true;
     opt.ReportApiVersions = true;
-    // https://referbruv.com/blog/versioning-apis-in-aspnet-core-explained-strategies-and-implementations/
-    opt.ApiVersionReader = new QueryStringApiVersionReader(); //?api-version=2.0
-    //opt.ApiVersionReader = new UrlSegmentApiVersionReader(); //v2.0/ NOTE: update route to [Route("v{version:apiVersion}/[controller]")]
+    opt.ApiVersionReader = new QueryStringApiVersionReader();           //?api-version=2.0
+    //opt.ApiVersionReader = new UrlSegmentApiVersionReader();          //v2.0/ NOTE: update route to [Route("v{version:apiVersion}/[controller]")]
     //opt.ApiVersionReader = new HeaderApiVersionReader("api-version"); //api-version: 2.0
-    //opt.ApiVersionReader = new MediaTypeApiVersionReader();  //Content-Type: application/json;v=2.0
-}).AddMvc().AddApiExplorer(opt =>
+    //opt.ApiVersionReader = new MediaTypeApiVersionReader();           //Content-Type: application/json;v=2.0
+}).AddApiExplorer(opt =>
 {
     opt.GroupNameFormat = "'v'VVV";
-    opt.SubstituteApiVersionInUrl = true;
+    opt.DefaultApiVersion = ApiVersion.Default;
 });
 
 builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
@@ -47,7 +46,7 @@ if (app.Environment.IsDevelopment())
     {
         foreach (var description in app.DescribeApiVersions())
         {
-            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName );
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
         };
     });
 }

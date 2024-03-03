@@ -17,6 +17,8 @@ public enum TemperatureUnit
 [ApiController]
 [ApiVersion(1.0, Deprecated = false)]
 [ApiVersion(2.0, Deprecated = false)]
+[Consumes("application/json")]
+[Produces("application/json")]
 [Route("[controller]")]
 //[Route("v{version:apiVersion}/[controller]")]
 public class WeatherForecastController : ControllerBase
